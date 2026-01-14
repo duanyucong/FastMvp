@@ -3,9 +3,14 @@ package ${packageName};
 import android.view.LayoutInflater;
 
 import com.dtcnet.skmvp.mvp.view.BaseFragment;
-import ${packageName}.databinding.Fragment${className}Binding;
 
 public class ${className}Fragment extends BaseFragment<${className}Contract.P, Fragment${className}Binding> implements ${className}Contract.V {
+
+    @Override
+    public void registerDagger(AppComponent appComponent) {
+
+    }
+
     @Override
     public Fragment${className}Binding viewBinding(LayoutInflater inflater) {
         return Fragment${className}Binding.inflate(inflater);

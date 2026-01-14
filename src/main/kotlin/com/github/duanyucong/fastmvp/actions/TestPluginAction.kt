@@ -33,13 +33,17 @@ class TestPluginAction : AnAction() {
         val packageNameMatch = Regex("package\\s+([^;]+);").find(fileContent)
         val packageName = packageNameMatch?.groupValues?.get(1) ?: return
         
+        // 获取当前文件所在目录
+        val currentDir = virtualFile.parent?.path ?: return
+        
         // 生成MVP代码
         val codeGenerator = CodeGenerator(project)
-        val logs = codeGenerator.generate(
+        val logs = codeGenerator.generateFromCurrentFile(
             className.dropLast(if (isActivity) 8 else 9), // 移除Activity或Fragment后缀
             packageName,
             isActivity,
-            true // 默认生成Dagger组件
+            true, // 默认生成Dagger组件
+            currentDir
         )
         
         // 显示执行记录和日志

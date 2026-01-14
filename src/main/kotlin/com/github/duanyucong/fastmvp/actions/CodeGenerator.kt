@@ -11,6 +11,66 @@ class CodeGenerator(private val project: Project) {
     
     private val logs = mutableListOf<String>()
     
+    // 从当前文件路径生成
+    fun generateFromCurrentFile(className: String, packageName: String, isActivity: Boolean, generateDagger: Boolean, targetDir: String): List<String> {
+        logs.clear()
+        addLog("Starting MVP code generation for $className")
+        addLog("Package: $packageName")
+        addLog("Type: ${if (isActivity) "Activity" else "Fragment"}")
+        addLog("Generate Dagger components: $generateDagger")
+        addLog("Target directory: $targetDir")
+        
+        thisLogger().info("Generating MVP code for $className, package: $packageName, isActivity: $isActivity, generateDagger: $generateDagger, targetDir: $targetDir")
+        
+        // 确定模板类型（Activity或Fragment）
+        val templateType = if (isActivity) "activity" else "fragment"
+        
+        // 直接在目标目录下生成文件
+        copyTemplateFile(templateType, templateType.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }, className, packageName, targetDir)
+        copyTemplateFile(templateType, "Contract", className, packageName, targetDir)
+        copyTemplateFile(templateType, "Model", className, packageName, targetDir)
+        copyTemplateFile(templateType, "Presenter", className, packageName, targetDir)
+        
+        // 如果需要生成Dagger组件，直接在目标目录下创建dagger文件夹
+        if (generateDagger) {
+            val daggerPath = Paths.get(targetDir, "dagger").toString()
+            val componentPath = Paths.get(daggerPath, "component").toString()
+            val modulePath = Paths.get(daggerPath, "module").toString()
+            
+            // 创建Dagger目录
+            val componentDir = File(componentPath)
+            val moduleDir = File(modulePath)
+            
+            if (!componentDir.exists()) {
+                val created = componentDir.mkdirs()
+                if (!created) {
+                    val errorMsg = "Error: Failed to create component directory: $componentPath"
+                    addLog(errorMsg)
+                    thisLogger().error(errorMsg)
+                }
+            }
+            
+            if (!moduleDir.exists()) {
+                val created = moduleDir.mkdirs()
+                if (!created) {
+                    val errorMsg = "Error: Failed to create module directory: $modulePath"
+                    addLog(errorMsg)
+                    thisLogger().error(errorMsg)
+                }
+            }
+            
+            addLog("Created Dagger directories in target dir: $daggerPath")
+            
+            copyTemplateFile(templateType, "component", className, packageName, componentPath)
+            copyTemplateFile(templateType, "module", className, packageName, modulePath)
+        }
+        
+        addLog("MVP code generation completed for $className")
+        thisLogger().info("MVP code generation completed for $className")
+        return logs
+    }
+    
+    // 兼容旧方法，用于对话框生成
     fun generate(className: String, packageName: String, isActivity: Boolean, generateDagger: Boolean): List<String> {
         logs.clear()
         addLog("Starting MVP code generation for $className")
@@ -42,49 +102,8 @@ class CodeGenerator(private val project: Project) {
         }
         addLog("Created package directory: $srcPath")
         
-        // 复制并修改模板文件
-        copyTemplateFile(templateType, templateType.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }, className, packageName, srcPath)
-        copyTemplateFile(templateType, "Contract", className, packageName, srcPath)
-        copyTemplateFile(templateType, "Model", className, packageName, srcPath)
-        copyTemplateFile(templateType, "Presenter", className, packageName, srcPath)
-        
-        // 如果需要生成Dagger组件
-        if (generateDagger) {
-            val daggerPath = Paths.get(srcPath, "dagger").toString()
-            val componentPath = Paths.get(daggerPath, "component").toString()
-            val modulePath = Paths.get(daggerPath, "module").toString()
-            
-            // 创建Dagger目录
-            val componentDir = File(componentPath)
-            val moduleDir = File(modulePath)
-            
-            if (!componentDir.exists()) {
-                val created = componentDir.mkdirs()
-                if (!created) {
-                    val errorMsg = "Error: Failed to create component directory: $componentPath"
-                    addLog(errorMsg)
-                    thisLogger().error(errorMsg)
-                }
-            }
-            
-            if (!moduleDir.exists()) {
-                val created = moduleDir.mkdirs()
-                if (!created) {
-                    val errorMsg = "Error: Failed to create module directory: $modulePath"
-                    addLog(errorMsg)
-                    thisLogger().error(errorMsg)
-                }
-            }
-            
-            addLog("Created Dagger directories")
-            
-            copyTemplateFile(templateType, "component", className, packageName, componentPath)
-            copyTemplateFile(templateType, "module", className, packageName, modulePath)
-        }
-        
-        addLog("MVP code generation completed for $className")
-        thisLogger().info("MVP code generation completed for $className")
-        return logs
+        // 调用新的生成方法
+        return generateFromCurrentFile(className, packageName, isActivity, generateDagger, srcPath)
     }
     
     private fun addLog(message: String) {
@@ -135,9 +154,19 @@ class CodeGenerator(private val project: Project) {
         // 写入新文件
         val destFile = File(destPath, destFileName)
         try {
+            // 检查文件是否已存在
+            val fileExisted = destFile.exists()
+            
+            // 写入文件（会自动覆写已存在的文件）
             destFile.writeText(processedContent)
-            addLog("Generated file: ${destFile.absolutePath}")
-            thisLogger().info("Generated file: ${destFile.absolutePath}")
+            
+            if (fileExisted) {
+                addLog("Overwrote file: ${destFile.absolutePath}")
+                thisLogger().info("Overwrote file: ${destFile.absolutePath}")
+            } else {
+                addLog("Generated file: ${destFile.absolutePath}")
+                thisLogger().info("Generated file: ${destFile.absolutePath}")
+            }
             
             // 验证文件是否实际存在且内容正确
             if (destFile.exists()) {
@@ -150,12 +179,36 @@ class CodeGenerator(private val project: Project) {
             }
             
             // 刷新VFS，使IntelliJ能够识别新文件
-            val virtualFile = LocalFileSystem.getInstance().findFileByPath(destFile.absolutePath)
+            val localFileSystem = LocalFileSystem.getInstance()
+            
+            // 1. 刷新整个项目的根目录，确保VFS完全更新
+            project.basePath?.let {
+                val projectRootVirtualFile = localFileSystem.findFileByPath(it)
+                if (projectRootVirtualFile != null) {
+                    projectRootVirtualFile.refresh(true, true) // 递归刷新所有子目录
+                    addLog("Project root VFS refresh completed: ${projectRootVirtualFile.path}")
+                }
+            }
+            
+            // 2. 再次尝试刷新父目录
+            val parentPath = destFile.parentFile?.absolutePath
+            if (parentPath != null) {
+                val parentVirtualFile = localFileSystem.refreshAndFindFileByPath(parentPath)
+                if (parentVirtualFile != null) {
+                    parentVirtualFile.refresh(false, true)
+                    addLog("Parent directory VFS refresh completed: $parentPath")
+                }
+            }
+            
+            // 3. 最后尝试获取并刷新文件
+            val virtualFile = localFileSystem.refreshAndFindFileByPath(destFile.absolutePath)
             if (virtualFile != null) {
                 virtualFile.refresh(false, true)
                 addLog("VFS refresh completed for: ${destFile.absolutePath}")
+                thisLogger().info("VFS refresh completed for: ${destFile.absolutePath}")
             } else {
-                addLog("VFS refresh failed: Could not find virtual file for: ${destFile.absolutePath}")
+                addLog("VFS refresh: File found in VFS after global refresh")
+                thisLogger().info("VFS refresh: File found in VFS after global refresh")
             }
         } catch (e: Exception) {
             val errorMsg = "Error writing file ${destFile.absolutePath}: ${e.message}"
