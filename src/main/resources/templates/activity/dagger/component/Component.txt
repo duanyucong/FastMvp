@@ -1,0 +1,13 @@
+package ${packageName}.dagger.component;
+
+import ${packageName}.dagger.module.${className}Module;
+import ${packageName}.${className}Activity;
+import com.dtcnet.skmvp.dagger.scope.ActivityScope;
+
+import dagger.Component;
+
+@ActivityScope
+@Component(modules = {${className}Module.class})
+public interface ${className}Component {
+    void Inject(${className}Activity arg);
+}

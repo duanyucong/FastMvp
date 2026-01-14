@@ -1,0 +1,13 @@
+package ${packageName}.dagger.component;
+
+import ${packageName}.dagger.module.${className}Module;
+import ${packageName}.${className}Fragment;
+import com.dtcnet.skmvp.dagger.scope.FragmentScope;
+
+import dagger.Component;
+
+@FragmentScope
+@Component(modules = {${className}Module.class})
+public interface ${className}Component {
+    void Inject(${className}Fragment arg);
+}

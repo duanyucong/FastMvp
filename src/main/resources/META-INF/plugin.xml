@@ -7,9 +7,13 @@
     <depends>com.intellij.modules.platform</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.duanyucong.fastmvp.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.duanyucong.fastmvp.startup.MyProjectActivity" />
-    </extensions>
+    
+    <actions>
+        <action id="FastMvp.TestPluginAction"
+                class="com.github.duanyucong.fastmvp.actions.TestPluginAction"
+                text="FastMvp"
+                description="Generate MVP architecture code">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>

@@ -1,0 +1,37 @@
+package ${packageName}.dagger.module;
+
+import ${packageName}.${className}Contract;
+import ${packageName}.${className}Model;
+import ${packageName}.${className}Presenter;
+import com.dtcnet.skmvp.dagger.scope.FragmentScope;
+
+import dagger.Module;
+import dagger.Provides;
+
+@Module
+public class ${className}Module {
+
+    private ${className}Contract.V v;
+
+    public ${className}Module(${className}Contract.V v) {
+        this.v = v;
+    }
+
+    @FragmentScope
+    @Provides
+    ${className}Contract.V provideDemoView() {
+        return v;
+    }
+
+    @FragmentScope
+    @Provides
+    ${className}Contract.M provideDemoModel(${className}Model model) {
+        return model;
+    }
+
+    @FragmentScope
+    @Provides
+    ${className}Contract.P provideDemoPresenter(${className}Presenter presenter) {
+        return presenter;
+    }
+}

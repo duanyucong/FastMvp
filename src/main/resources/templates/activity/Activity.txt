@@ -1,0 +1,25 @@
+package ${packageName};
+
+import android.view.LayoutInflater;
+
+import com.dtcnet.skmvp.dagger.component.AppComponent;
+import com.dtcnet.skmvp.mvp.view.BaseActivity;
+import ${packageName}.databinding.Activity${className}Binding;
+import ${packageName}.dagger.component.Dagger${className}Component;
+import ${packageName}.dagger.module.${className}Module;
+
+public class ${className}Activity extends BaseActivity<${className}Contract.P, Activity${className}Binding> implements ${className}Contract.V {
+
+    @Override
+    public void registerDagger(AppComponent appComponent) {
+        Dagger${className}Component.builder()
+                .${className}Module(new ${className}Module(this))
+                .build()
+                .Inject(this);
+    }
+
+    @Override
+    public Activity${className}Binding viewBinding(LayoutInflater layoutInflater) {
+        return Activity${className}Binding.inflate(layoutInflater);
+    }
+}

@@ -1,0 +1,11 @@
+package ${packageName};
+
+import javax.inject.Inject;
+import com.dtcnet.skmvp.mvp.model.BaseModel;
+
+public class ${className}Model extends BaseModel implements ${className}Contract.M {
+    
+    @Inject
+    public ${className}Model() {
+    }
+}

@@ -1,0 +1,37 @@
+package ${packageName}.dagger.module;
+
+import ${packageName}.${className}Contract;
+import ${packageName}.${className}Model;
+import ${packageName}.${className}Presenter;
+import com.dtcnet.skmvp.dagger.scope.ActivityScope;
+
+import dagger.Module;
+import dagger.Provides;
+
+@Module
+public class ${className}Module {
+
+    private ${className}Contract.V v;
+
+    public ${className}Module(${className}Contract.V v) {
+        this.v = v;
+    }
+
+    @ActivityScope
+    @Provides
+    ${className}Contract.V provideMainView() {
+        return v;
+    }
+
+    @ActivityScope
+    @Provides
+    ${className}Contract.M provideMainModel(${className}Model model) {
+        return model;
+    }
+
+    @ActivityScope
+    @Provides
+    ${className}Contract.P provideMainPresenter(${className}Presenter presenter) {
+        return presenter;
+    }
+}
